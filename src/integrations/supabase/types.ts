@@ -92,6 +92,39 @@ export type Database = {
         }
         Relationships: []
       }
+      bonus_popup_settings: {
+        Row: {
+          button_text: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          popup_description: string | null
+          popup_title: string
+          updated_at: string
+          welcome_message: string | null
+        }
+        Insert: {
+          button_text?: string | null
+          created_at: string
+          id?: string
+          image_url?: string | null
+          popup_description?: string | null
+          popup_title: string
+          updated_at: string
+          welcome_message?: string | null
+        }
+        Update: {
+          button_text?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          popup_description?: string | null
+          popup_title?: string
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Relationships: []
+      }
       deposit_config: {
         Row: {
           created_at: string | null
@@ -300,6 +333,7 @@ export type Database = {
       referrals: {
         Row: {
           bonus_amount: number | null
+          bonus_paid: boolean | null
           created_at: string | null
           id: string
           is_paid: boolean | null
@@ -308,6 +342,7 @@ export type Database = {
         }
         Insert: {
           bonus_amount?: number | null
+          bonus_paid?: boolean | null
           created_at?: string | null
           id?: string
           is_paid?: boolean | null
@@ -316,6 +351,7 @@ export type Database = {
         }
         Update: {
           bonus_amount?: number | null
+          bonus_paid?: boolean | null
           created_at?: string | null
           id?: string
           is_paid?: boolean | null
@@ -388,7 +424,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_user_balance: {
+        Args: { user_id: string; amount: number }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

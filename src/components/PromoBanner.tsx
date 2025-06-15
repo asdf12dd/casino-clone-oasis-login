@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
@@ -9,8 +8,9 @@ import {
   CarouselNext,
   CarouselPrevious
 } from "@/components/ui/carousel";
+import { supabase } from '@/integrations/supabase/client';
 
-const banners = [
+const defaultBanners = [
   {
     id: 1,
     image: "/lovable-uploads/a1c08101-4964-4060-9c92-da874d8f1545.png",
@@ -37,6 +37,49 @@ const PromoBanner = () => {
   const [api, setApi] = React.useState<any>();
   const [current, setCurrent] = React.useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [banners, setBanners] = useState(defaultBanners);
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const { data: imageConfigs, error } = await supabase
+          .from('image_configs')
+          .select('item_id, image_url')
+          .eq('image_type', 'banner');
+
+        if (error) {
+          console.error('Error fetching banner configs:', error);
+          return;
+        }
+        
+        const bannerMap = new Map(imageConfigs.map(item => [item.item_id, item.image_url]));
+        
+        const updatedBanners = defaultBanners.map(banner => ({
+          ...banner,
+          image: bannerMap.get(String(banner.id)) || banner.image,
+        }));
+        
+        setBanners(updatedBanners);
+      } catch (err) {
+        console.error("Unexpected error fetching banners", err);
+      }
+    };
+
+    fetchBanners();
+
+    const channel = supabase.channel('image_configs_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'image_configs', filter: 'image_type=eq.banner' },
+        (payload) => {
+          console.log('Change received!', payload)
+          fetchBanners();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Auto scroll effect
   useEffect(() => {
@@ -51,7 +94,9 @@ const PromoBanner = () => {
     
     // Start auto-scroll
     intervalRef.current = setInterval(() => {
-      api.scrollNext();
+      if (document.hasFocus()) {
+        api.scrollNext();
+      }
     }, 4000);
     
     return () => {
